@@ -1,0 +1,100 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id          String    @id @default(cuid())
+  email       String    @unique
+  password    String
+  name        String
+  role        UserRole
+  propertyId  String?
+  property    Property? @relation(fields: [propertyId], references: [id])
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([propertyId])
+}
+
+model Property {
+  id          String    @id @default(cuid())
+  name        String
+  type        PropertyType
+  address     String
+  users       User[]
+  rooms       Room[]
+  bookings    Booking[]
+  expenses    Expense[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Room {
+  id          String    @id @default(cuid())
+  number      String
+  type        String
+  price       Float
+  propertyId  String
+  property    Property  @relation(fields: [propertyId], references: [id])
+  bookings    Booking[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@unique([propertyId, number])
+  @@index([propertyId])
+}
+
+model Booking {
+  id          String    @id @default(cuid())
+  guestName   String
+  email       String
+  checkIn     DateTime
+  checkOut    DateTime
+  status      BookingStatus
+  totalAmount Float
+  roomId      String
+  room        Room      @relation(fields: [roomId], references: [id])
+  propertyId  String
+  property    Property  @relation(fields: [propertyId], references: [id])
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([roomId])
+  @@index([propertyId])
+}
+
+model Expense {
+  id          String    @id @default(cuid())
+  description String
+  amount      Float
+  category    String
+  date        DateTime
+  propertyId  String
+  property    Property  @relation(fields: [propertyId], references: [id])
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([propertyId])
+}
+
+enum UserRole {
+  ADMIN
+  OWNER
+  EMPLOYEE
+}
+
+enum PropertyType {
+  HOTEL
+  HOSTEL
+}
+
+enum BookingStatus {
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
